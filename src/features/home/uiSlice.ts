@@ -9,6 +9,7 @@ export type ChatMessage = {
 
 export type ChatProvider = {
     id: number
+    uid?: string
     name: string
     category: string
     image?: string
@@ -32,6 +33,7 @@ const initialState: UiState = {
 function makeProvider(place: Place): ChatProvider {
     return {
         id: place.id,
+        uid: place.uid,
         name: place.name,
         category: place.category,
         image: place.image,

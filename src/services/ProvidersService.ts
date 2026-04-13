@@ -15,6 +15,7 @@ export async function getProviders(): Promise<Place[]> {
 
         return {
             id: typeof data.id === 'number' ? data.id : index + 1,
+            uid: typeof data.uid === 'string' ? data.uid : '',
             name: typeof data.name === 'string' ? data.name : 'Unknown Provider',
             category:
                 typeof data.category === 'string' ? data.category : 'maintenance',

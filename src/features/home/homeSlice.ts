@@ -31,6 +31,7 @@ export interface Place {
     bio?: string
     city?: string
     locationLink?: string
+    uid?: string
 }
 
 
