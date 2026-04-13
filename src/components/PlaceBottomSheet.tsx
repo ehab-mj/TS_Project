@@ -3,7 +3,9 @@ import '../styles/PlaceBottomSheet.css'
 import { useAppDispatch, useAppSelector } from '../app/hooks'
 import { toggleFavorite } from '../features/home/favoritesSlice'
 import { openProviderChat } from '../features/home/uiSlice'
+import { useNavigate } from 'react-router-dom'
 
+import '../styles/PlaceBottomSheet.css'
 type Props = {
     place: Place | null
     onClose: () => void
@@ -14,6 +16,7 @@ type Props = {
 export default function PlaceBottomSheet({ place, onClose, onBookNow }: Props) {
     const dispatch = useAppDispatch()
     const favoriteItems = useAppSelector((state) => state.favorites.items)
+    const navigate = useNavigate()
 
     const isFavorite =
         place ? favoriteItems.some((item) => item.id === place.id) : false
@@ -128,7 +131,15 @@ export default function PlaceBottomSheet({ place, onClose, onBookNow }: Props) {
                                 Book Now
                             </button>
 
-                            <button type="button" className="place-sheet__secondary">
+                            <button
+                                type="button"
+                                className="place-sheet__secondary"
+                                onClick={() => {
+                                    if (place) {
+                                        navigate(`/provider/${place.id}`)
+                                    }
+                                }}
+                            >
                                 View Profile
                             </button>
                         </div>

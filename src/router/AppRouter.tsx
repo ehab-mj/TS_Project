@@ -13,6 +13,7 @@ import GuestDashboardPage from '../Pages/Dashboards/GuestDashboardPage'
 import ProviderDashboardPage from '../Pages/Dashboards/ProviderDashboardPage'
 import ProviderSetupPage from '../Pages/Dashboards/ProviderSetupPage'
 import ProtectedRoute from './ProtectedRoute'
+import ProviderProfilePage from '../Pages/ProviderProfilePage'
 
 
 const router = createBrowserRouter([
@@ -62,7 +63,11 @@ const router = createBrowserRouter([
             {
                 path: '/provider-setup',
                 element: <ProviderSetupPage />,
-            }
+            },
+            {
+                path: '/provider/:id',
+                element: <ProviderProfilePage />,
+            },
         ],
     },
 ])

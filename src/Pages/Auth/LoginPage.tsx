@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import type { FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../app/hooks'
 import { clearAuthError, loginUser } from '../../features/auth/authSlice'
@@ -20,7 +19,7 @@ export default function LoginPage() {
   const [formData, setFormData] = useState<LoginFormData>(initialForm)
   const [error, setError] = useState('')
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     dispatch(clearAuthError())
     setError('')
@@ -30,8 +29,9 @@ export default function LoginPage() {
       return
     }
 
-    const didLogin = dispatch(loginUser(formData) as never)
-    if (didLogin) {
+    const resultAction = await dispatch(loginUser(formData))
+
+    if ((resultAction as any).type === 'auth/loginUser/fulfilled') {
       navigate('/profile', { replace: true })
     }
   }
