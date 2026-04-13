@@ -1,0 +1,39 @@
+.app-layout {
+    position: relative;
+    min-height: 100vh;
+    background: #141414;
+    overflow-x: hidden;
+    overflow-y: visible;
+}
+
+.app-layout__content {
+    min-height: 100vh;
+    overflow: visible;
+}
+
+.app-layout--home {
+    height: 100vh;
+    overflow: hidden;
+}
+
+.app-layout--home .app-layout__content {
+    height: 100vh;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+    .app-layout {
+        overflow-x: hidden;
+        overflow-y: visible;
+    }
+
+    .app-layout--home {
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .app-layout__content {
+        overflow: visible;
+    }
+}
