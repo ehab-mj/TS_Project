@@ -1,5 +1,8 @@
 .search-header {
-    position: absolute;
+    /* changing */
+    position: fixed;
+    /* ** */
+    
     top: 0;
     left: 0;
     right: 0;
@@ -241,6 +244,10 @@
 
 @media (min-width: 1024px) {
     .search-header {
+        /* adding */
+        position: absolute;
+        /* ** */
+
         display: grid;
         grid-template-columns: auto minmax(420px, 560px) 1fr;
         align-items: center;

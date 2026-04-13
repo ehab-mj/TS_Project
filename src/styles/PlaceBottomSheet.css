@@ -16,7 +16,7 @@
     position: absolute;
     left: 12px;
     right: 12px;
-    bottom: 12px;
+    bottom: 92px;
     z-index: 40;
 
     padding: 14px 14px 16px;
@@ -271,7 +271,7 @@
     .place-sheet {
         left: 24px;
         right: 24px;
-        bottom: 20px;
+        bottom: 90px;
         padding: 16px 16px 18px;
     }
 
