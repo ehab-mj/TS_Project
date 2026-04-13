@@ -1,8 +1,12 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../app/hooks'
 import { clearAuthError, loginUser } from '../../features/auth/authSlice'
-import { selectAuthError, selectAuthLoading } from '../../features/auth/selectors'
+import {
+  selectAuthError,
+  selectAuthLoading,
+  selectIsAuthenticated,
+} from '../../features/auth/selectors'
 import type { LoginFormData } from '../../types/auth'
 import '../../styles/AuthPage.css'
 
@@ -16,8 +20,16 @@ export default function LoginPage() {
   const navigate = useNavigate()
   const loading = useAppSelector(selectAuthLoading)
   const authError = useAppSelector(selectAuthError)
+  const isAuthenticated = useAppSelector(selectIsAuthenticated)
+
   const [formData, setFormData] = useState<LoginFormData>(initialForm)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/profile', { replace: true })
+    }
+  }, [isAuthenticated, navigate])
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -29,11 +41,7 @@ export default function LoginPage() {
       return
     }
 
-    const resultAction = await dispatch(loginUser(formData))
-
-    if ((resultAction as any).type === 'auth/loginUser/fulfilled') {
-      navigate('/profile', { replace: true })
-    }
+    await dispatch(loginUser(formData))
   }
 
   return (
