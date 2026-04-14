@@ -1,34 +1,21 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../app/hooks'
+import { selectAuthUser } from '../features/auth/selectors'
 import { openExistingChatByProviderId } from '../features/home/uiSlice'
+import { listenToGuestConversations, type ConversationItem } from '../services/chatService'
 import '../styles/ChatsPage.css'
-
-function getLastMessage(messages: { text: string }[]) {
-    if (!messages.length) return 'No messages yet'
-    return messages[messages.length - 1]?.text ?? 'No messages yet'
-}
 
 export default function ChatsPage() {
     const navigate = useNavigate()
     const dispatch = useAppDispatch()
-    const { messagesByProviderId, providersById } = useAppSelector((state) => state.ui)
+    const user = useAppSelector(selectAuthUser)
+    const [conversations, setConversations] = useState<ConversationItem[]>([])
 
-    const conversations = Object.entries(messagesByProviderId)
-        .map(([providerId, messages]) => {
-            const numericId = Number(providerId)
-            const provider = providersById[numericId]
-
-            if (!provider) return null
-
-            return {
-                provider,
-                messages,
-                lastMessage: getLastMessage(messages),
-                lastMessageId: messages[messages.length - 1]?.id ?? 0,
-            }
-        })
-        .filter(Boolean)
-        .sort((a, b) => (b?.lastMessageId ?? 0) - (a?.lastMessageId ?? 0))
+    useEffect(() => {
+        const unsubscribe = listenToGuestConversations(user, setConversations)
+        return () => unsubscribe()
+    }, [user])
 
     return (
         <section className="chats-page">
@@ -50,61 +37,61 @@ export default function ChatsPage() {
                 </div>
             ) : (
                 <div className="chats-list">
-                    {conversations.map((conversation) => {
-                        if (!conversation) return null
-
-                        const { provider, lastMessage, messages } = conversation
-
-                        return (
-                            <article
-                                key={provider.id}
-                                className="chat-row"
-                                onClick={() => {
-                                    dispatch(openExistingChatByProviderId(provider.id))
+                    {conversations.map((conversation) => (
+                        <article
+                            key={conversation.id}
+                            className="chat-row"
+                            onClick={() => {
+                                dispatch(
+                                    openExistingChatByProviderId(conversation.providerId)
+                                )
+                                navigate('/')
+                            }}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault()
+                                    dispatch(
+                                        openExistingChatByProviderId(conversation.providerId)
+                                    )
                                     navigate('/')
-                                }}
-                                role="button"
-                                tabIndex={0}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter' || e.key === ' ') {
-                                        e.preventDefault()
-                                        dispatch(openExistingChatByProviderId(provider.id))
-                                        navigate('/')
-                                    }
-                                }}
-                            >
-                                {provider.image ? (
-                                    <img
-                                        src={provider.image}
-                                        alt={provider.name}
-                                        className="chat-row__avatar"
-                                    />
-                                ) : (
-                                    <div className="chat-row__avatar chat-row__avatar--placeholder">
-                                        {provider.name.slice(0, 1)}
-                                    </div>
-                                )}
+                                }
+                            }}
+                        >
+                            {conversation.providerImage ? (
+                                <img
+                                    src={conversation.providerImage}
+                                    alt={conversation.providerName}
+                                    className="chat-row__avatar"
+                                />
+                            ) : (
+                                <div className="chat-row__avatar chat-row__avatar--placeholder">
+                                    {conversation.providerName.slice(0, 1)}
+                                </div>
+                            )}
 
-                                <div className="chat-row__content">
-                                    <div className="chat-row__top">
-                                        <h2 className="chat-row__name">{provider.name}</h2>
-                                        <span
-                                            className={`chat-row__status chat-row__status--${provider.status ?? 'active'}`}
-                                        >
-                                            {provider.status === 'busy' ? 'Busy' : 'Active'}
-                                        </span>
-                                    </div>
-
-                                    <p className="chat-row__category">{provider.category}</p>
-                                    <p className="chat-row__preview">{lastMessage}</p>
+                            <div className="chat-row__content">
+                                <div className="chat-row__top">
+                                    <h2 className="chat-row__name">{conversation.providerName}</h2>
+                                    <span
+                                        className={`chat-row__status chat-row__status--${conversation.providerStatus}`}
+                                    >
+                                        {conversation.providerStatus === 'busy' ? 'Busy' : 'Active'}
+                                    </span>
                                 </div>
 
-                                <div className="chat-row__count">
-                                    {messages.length}
-                                </div>
-                            </article>
-                        )
-                    })}
+                                <p className="chat-row__category">{conversation.providerCategory}</p>
+                                <p className="chat-row__preview">
+                                    {conversation.lastMessage || 'No messages yet'}
+                                </p>
+                            </div>
+
+                            <div className="chat-row__count">
+                                {conversation.providerUnreadCount}
+                            </div>
+                        </article>
+                    ))}
                 </div>
             )}
         </section>

@@ -9,7 +9,7 @@ export type ChatMessage = {
 
 export type ChatProvider = {
     id: number
-    uid?: string
+    uid: string
     name: string
     category: string
     image?: string
@@ -33,7 +33,7 @@ const initialState: UiState = {
 function makeProvider(place: Place): ChatProvider {
     return {
         id: place.id,
-        uid: place.uid,
+        uid: place.uid ?? '',
         name: place.name,
         category: place.category,
         image: place.image,
@@ -110,6 +110,10 @@ const uiSlice = createSlice({
                 text,
             })
         },
+
+        clearMessagesForProvider: (state, action: PayloadAction<number>) => {
+            delete state.messagesByProviderId[action.payload]
+        },
     },
 })
 
@@ -119,6 +123,7 @@ export const {
     closeChat,
     sendMessageToProvider,
     receiveMessageFromProvider,
+    clearMessagesForProvider,
 } = uiSlice.actions
 
 export default uiSlice.reducer

@@ -14,6 +14,7 @@ interface FormErrors {
     phone?: string
     city?: string
     locationLink?: string
+    image?: string
 }
 
 const categoryMap: Record<ServiceCategory, string> = {
@@ -23,6 +24,7 @@ const categoryMap: Record<ServiceCategory, string> = {
     carpentry: 'carpenter',
     cleaning: 'cleaning services',
     painting: 'painting',
+    repair: 'repair',
 }
 
 function extractLatLngFromGoogleMapsLink(link: string): { lat: number; lng: number } | null {
@@ -55,7 +57,9 @@ function extractLatLngFromGoogleMapsLink(link: string): { lat: number; lng: numb
     return null
 }
 
-const ProviderSetupPage = () => {
+const initialCoords = null as { lat: number; lng: number } | null
+
+export default function ProviderSetupPage() {
     const dispatch = useAppDispatch()
     const navigate = useNavigate()
 
@@ -76,6 +80,7 @@ const ProviderSetupPage = () => {
                 phone: '',
                 city: '',
                 locationLink: '',
+                image: '',
                 bio: '',
                 isAvailable: true,
             }
@@ -85,7 +90,7 @@ const ProviderSetupPage = () => {
     const [formData, setFormData] = useState<ProviderProfile | null>(initialForm)
     const [errors, setErrors] = useState<FormErrors>({})
     const [isSaving, setIsSaving] = useState(false)
-    const [locationCoords, setLocationCoords] = useState<{ lat: number; lng: number } | null>(null)
+    const [locationCoords, setLocationCoords] = useState(initialCoords)
     const [locationMode, setLocationMode] = useState<'none' | 'current' | 'link'>('none')
 
     useEffect(() => {
@@ -120,6 +125,10 @@ const ProviderSetupPage = () => {
 
         if (!formData.city.trim()) {
             newErrors.city = 'City is required'
+        }
+
+        if (!formData.image.trim()) {
+            newErrors.image = 'Image is required'
         }
 
         const hasCurrentLocation = locationMode === 'current' && locationCoords
@@ -157,9 +166,9 @@ const ProviderSetupPage = () => {
         })
 
         if (name === 'locationLink') {
-            setLocationMode(value.trim() ? 'link' : 'none')
-            const coords = extractLatLngFromGoogleMapsLink(value.trim())
-            setLocationCoords(coords)
+            const cleanValue = value.trim()
+            setLocationMode(cleanValue ? 'link' : 'none')
+            setLocationCoords(extractLatLngFromGoogleMapsLink(cleanValue))
         }
 
         setErrors((prev) => ({
@@ -243,6 +252,7 @@ const ProviderSetupPage = () => {
             phone: formData.phone.trim(),
             city: formData.city.trim(),
             locationLink: formData.locationLink.trim(),
+            image: formData.image.trim(),
             bio: formData.bio?.trim() ?? '',
         }
 
@@ -258,7 +268,7 @@ const ProviderSetupPage = () => {
             phone: cleanProfile.phone,
             bio: cleanProfile.bio ?? '',
             locationLink: cleanProfile.locationLink,
-            image: '',
+            image: cleanProfile.image,
             featured: false,
             status: cleanProfile.isAvailable ? 'active' : 'busy',
             isAvailable: cleanProfile.isAvailable,
@@ -287,7 +297,7 @@ const ProviderSetupPage = () => {
                             <p className="provider-setup-badge">Provider Setup</p>
                             <h1 className="provider-setup-title">Complete your provider profile</h1>
                             <p className="provider-setup-subtitle">
-                                Add your service category, city, phone number, location, and optional bio.
+                                Add your service category, city, phone number, location, image, and optional bio.
                             </p>
                         </div>
 
@@ -325,10 +335,9 @@ const ProviderSetupPage = () => {
                                         <option value="carpentry">Carpentry</option>
                                         <option value="cleaning">Cleaning</option>
                                         <option value="painting">Painting</option>
+                                        <option value="repair">Repair</option>
                                     </select>
-                                    {errors.serviceCategory ? (
-                                        <p className="field-error">{errors.serviceCategory}</p>
-                                    ) : null}
+                                    {errors.serviceCategory ? <p className="field-error">{errors.serviceCategory}</p> : null}
                                 </div>
 
                                 <div className="provider-setup-field">
@@ -358,9 +367,22 @@ const ProviderSetupPage = () => {
                                 </div>
 
                                 <div className="provider-setup-field provider-setup-field--full">
+                                    <label htmlFor="image">Business Image</label>
+                                    <input
+                                        id="image"
+                                        name="image"
+                                        type="text"
+                                        value={formData.image}
+                                        onChange={handleInputChange}
+                                        placeholder="Paste image URL"
+                                    />
+                                    {errors.image ? <p className="field-error">{errors.image}</p> : null}
+                                </div>
+
+                                <div className="provider-setup-field provider-setup-field--full">
                                     <label htmlFor="locationLink">Business Location</label>
 
-                                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
                                         <button
                                             type="button"
                                             className="provider-setup-button"
@@ -381,14 +403,11 @@ const ProviderSetupPage = () => {
 
                                     {locationMode === 'current' && locationCoords ? (
                                         <p className="provider-setup-hint">
-                                            Current location selected: {locationCoords.lat.toFixed(5)},{' '}
-                                            {locationCoords.lng.toFixed(5)}
+                                            Current location selected: {locationCoords.lat.toFixed(5)}, {locationCoords.lng.toFixed(5)}
                                         </p>
                                     ) : null}
 
-                                    {errors.locationLink ? (
-                                        <p className="field-error">{errors.locationLink}</p>
-                                    ) : null}
+                                    {errors.locationLink ? <p className="field-error">{errors.locationLink}</p> : null}
                                 </div>
 
                                 <div className="provider-setup-field provider-setup-field--full">
@@ -415,11 +434,7 @@ const ProviderSetupPage = () => {
                                     <span>Available for bookings</span>
                                 </label>
 
-                                <button
-                                    type="submit"
-                                    className="provider-setup-button"
-                                    disabled={isSaving}
-                                >
+                                <button type="submit" className="provider-setup-button" disabled={isSaving}>
                                     {isSaving ? 'Saving...' : 'Save Profile'}
                                 </button>
                             </div>
@@ -438,6 +453,10 @@ const ProviderSetupPage = () => {
                             <div className="provider-preview-row">
                                 <span>Phone</span>
                                 <strong>{formData.phone || 'Not added yet'}</strong>
+                            </div>
+                            <div className="provider-preview-row">
+                                <span>Image</span>
+                                <strong>{formData.image ? 'Added' : 'Not added yet'}</strong>
                             </div>
                             <div className="provider-preview-row">
                                 <span>Location</span>
@@ -465,5 +484,3 @@ const ProviderSetupPage = () => {
         </div>
     )
 }
-
-export default ProviderSetupPage

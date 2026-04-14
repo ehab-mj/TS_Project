@@ -37,7 +37,6 @@ export function getCategoryIcon(category: string) {
     if (value.includes('ac')) return '/icons/ac.png'
     if (value.includes('carp')) return '/icons/saw.png'
     if (value.includes('repair')) return '/icons/repair.png'
-    if (value.includes('appliance')) return '/icons/appliance-repair.png'
     if (value.includes('clean')) return '/icons/clean.png'
     if (value.includes('paint')) return '/icons/paint.png'
     if (value.includes('lock')) return '/icons/locksmith.png'

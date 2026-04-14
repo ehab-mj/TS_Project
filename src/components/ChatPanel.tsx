@@ -1,49 +1,79 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '../app/hooks'
+import { closeChat } from '../features/home/uiSlice'
+import { selectAuthUser } from '../features/auth/selectors'
 import {
-    closeChat,
-    receiveMessageFromProvider,
-    sendMessageToProvider,
-} from '../features/home/uiSlice'
+    ensureConversation,
+    listenToConversationMessages,
+    sendGuestMessageToProvider,
+    type ChatMessage,
+} from '../services/chatService'
 import '../styles/ChatPanel.css'
 
 export default function ChatPanel() {
     const dispatch = useAppDispatch()
-    const { isChatOpen, activeChatProvider, messagesByProviderId } = useAppSelector(
-        (state) => state.ui
-    )
+    const user = useAppSelector(selectAuthUser)
+    const { isChatOpen, activeChatProvider } = useAppSelector((state) => state.ui)
+
     const [input, setInput] = useState('')
+    const [messages, setMessages] = useState<ChatMessage[]>([])
+    const [conversationId, setConversationId] = useState('')
     const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
-    const activeMessages = activeChatProvider
-        ? messagesByProviderId[activeChatProvider.id] ?? []
-        : []
+    useEffect(() => {
+        let unsubscribe: (() => void) | null = null
+
+        const start = async () => {
+            if (!isChatOpen || !activeChatProvider?.uid) {
+                setMessages([])
+                setConversationId('')
+                return
+            }
+
+            const id = await ensureConversation({
+                providerId: activeChatProvider.id,
+                providerUid: activeChatProvider.uid,
+                providerName: activeChatProvider.name,
+                providerCategory: activeChatProvider.category,
+                providerImage: activeChatProvider.image,
+                providerStatus: activeChatProvider.status,
+                user,
+            })
+
+            setConversationId(id)
+            unsubscribe = listenToConversationMessages(id, setMessages)
+        }
+
+        start().catch((error) => {
+            console.error('Failed to start chat:', error)
+        })
+
+        return () => {
+            if (unsubscribe) unsubscribe()
+        }
+    }, [isChatOpen, activeChatProvider, user])
 
     useEffect(() => {
         if (!isChatOpen) return
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }, [activeMessages, isChatOpen])
+    }, [messages, isChatOpen])
 
-    const handleSend = () => {
+    const handleSend = async () => {
         const value = input.trim()
-        if (!value || !activeChatProvider) return
+        if (!value || !activeChatProvider?.uid) return
 
-        dispatch(
-            sendMessageToProvider({
-                providerId: activeChatProvider.id,
-                text: value,
-            })
-        )
+        await sendGuestMessageToProvider({
+            providerId: activeChatProvider.id,
+            providerUid: activeChatProvider.uid,
+            providerName: activeChatProvider.name,
+            providerCategory: activeChatProvider.category,
+            providerImage: activeChatProvider.image,
+            providerStatus: activeChatProvider.status,
+            user,
+            text: value,
+        })
+
         setInput('')
-
-        window.setTimeout(() => {
-            dispatch(
-                receiveMessageFromProvider({
-                    providerId: activeChatProvider.id,
-                    text: `Thanks for your message. This is ${activeChatProvider.name}, I will reply soon.`,
-                })
-            )
-        }, 700)
     }
 
     return (
@@ -93,10 +123,11 @@ export default function ChatPanel() {
                 </div>
 
                 <div className="chat-panel__messages">
-                    {activeMessages.map((message) => (
+                    {messages.map((message) => (
                         <div
                             key={message.id}
-                            className={`chat-panel__message chat-panel__message--${message.sender}`}
+                            className={`chat-panel__message chat-panel__message--${message.senderRole === 'provider' ? 'provider' : 'user'
+                                }`}
                         >
                             {message.text}
                         </div>
@@ -126,6 +157,7 @@ export default function ChatPanel() {
                         type="button"
                         className="chat-panel__send"
                         onClick={handleSend}
+                        disabled={!conversationId && !activeChatProvider?.uid}
                     >
                         Send
                     </button>

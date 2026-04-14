@@ -11,7 +11,6 @@ type CalendarCategory =
     | 'electrician'
     | 'ac repair'
     | 'repair service'
-    | 'appliance-repair'
     | 'carpenter'
     | 'maintenance'
     | 'locksmith'
@@ -28,7 +27,6 @@ const categories: CalendarCategory[] = [
     'electrician',
     'ac repair',
     'repair service',
-    'appliance-repair',
     'carpenter',
     'maintenance',
     'locksmith',
@@ -58,7 +56,6 @@ function getCategoryIcon(category: string) {
     if (value.includes('hvac')) return '/icons/ac.png'
     if (value.includes('carp')) return '/icons/carpentry.png'
     if (value.includes('repair')) return '/icons/repair.png'
-    if (value.includes('appliance')) return '/icons/appliance-repair.png'
     if (value.includes('tv')) return '/icons/tv.png'
     if (value.includes('clean')) return '/icons/cleaning.png'
     if (value.includes('paint')) return '/icons/paint.png'

@@ -1,14 +1,17 @@
 import {
     addDoc,
     collection,
+    doc,
+    increment,
     onSnapshot,
     orderBy,
     query,
     serverTimestamp,
-    updateDoc,
-    doc,
+    setDoc,
+    where,
     type Unsubscribe,
 } from 'firebase/firestore'
+import type { AppUser } from '../types/auth'
 import { db } from '../firebase/firebase'
 
 export type ChatMessage = {
@@ -17,6 +20,39 @@ export type ChatMessage = {
     senderRole: 'guest' | 'provider'
     senderUid: string
     isRead: boolean
+}
+
+export type ConversationItem = {
+    id: string
+    providerId: number
+    providerUid: string
+    providerName: string
+    providerCategory: string
+    providerImage: string
+    providerStatus: 'active' | 'busy'
+    guestKey: string
+    guestName: string
+    lastMessage: string
+    providerUnreadCount: number
+    guestUnreadCount: number
+}
+
+function getAnonymousGuestKey() {
+    const storageKey = 'smart-services-anon-guest-key'
+    const existing = localStorage.getItem(storageKey)
+    if (existing) return existing
+
+    const created = `guest_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+    localStorage.setItem(storageKey, created)
+    return created
+}
+
+export function getGuestKey(user: AppUser | null) {
+    return user?.uid ?? getAnonymousGuestKey()
+}
+
+export function getConversationId(providerUid: string, guestKey: string) {
+    return `${providerUid}__${guestKey}`
 }
 
 export function listenToConversationMessages(
@@ -43,34 +79,124 @@ export function listenToConversationMessages(
     })
 }
 
-type SendMessageInput = {
-    conversationId: string
-    text: string
-    senderRole: 'guest' | 'provider'
-    senderUid: string
+type EnsureConversationInput = {
+    providerId: number
+    providerUid: string
+    providerName: string
+    providerCategory: string
+    providerImage?: string
+    providerStatus?: 'active' | 'busy'
+    user: AppUser | null
 }
 
-export async function sendMessage(input: SendMessageInput) {
+export async function ensureConversation(input: EnsureConversationInput) {
+    const guestKey = getGuestKey(input.user)
+    const conversationId = getConversationId(input.providerUid, guestKey)
+
+    await setDoc(
+        doc(db, 'Chat', conversationId),
+        {
+            providerId: input.providerId,
+            providerUid: input.providerUid,
+            providerName: input.providerName,
+            providerCategory: input.providerCategory,
+            providerImage: input.providerImage ?? '',
+            providerStatus: input.providerStatus ?? 'active',
+            guestKey,
+            guestName: input.user?.displayName || 'Guest',
+            guestUid: input.user?.uid ?? '',
+            guestIsAnonymous: !input.user,
+            lastMessage: '',
+            lastSenderRole: '',
+            providerUnreadCount: 0,
+            guestUnreadCount: 0,
+            lastMessageAt: serverTimestamp(),
+        },
+        { merge: true }
+    )
+
+    return conversationId
+}
+
+type SendGuestMessageInput = {
+    providerId: number
+    providerUid: string
+    providerName: string
+    providerCategory: string
+    providerImage?: string
+    providerStatus?: 'active' | 'busy'
+    user: AppUser | null
+    text: string
+}
+
+export async function sendGuestMessageToProvider(input: SendGuestMessageInput) {
     const cleanText = input.text.trim()
     if (!cleanText) return
 
-    const messagesRef = collection(db, 'Chat', input.conversationId, 'messages')
+    const conversationId = await ensureConversation({
+        providerId: input.providerId,
+        providerUid: input.providerUid,
+        providerName: input.providerName,
+        providerCategory: input.providerCategory,
+        providerImage: input.providerImage,
+        providerStatus: input.providerStatus,
+        user: input.user,
+    })
 
-    await addDoc(messagesRef, {
+    await addDoc(collection(db, 'Chat', conversationId, 'messages'), {
         text: cleanText,
-        senderRole: input.senderRole,
-        senderUid: input.senderUid,
+        senderRole: 'guest',
+        senderUid: input.user?.uid ?? getGuestKey(input.user),
         isRead: false,
         createdAt: serverTimestamp(),
     })
 
-    const conversationRef = doc(db, 'Chat', input.conversationId)
+    await setDoc(
+        doc(db, 'Chat', conversationId),
+        {
+            lastMessage: cleanText,
+            lastSenderRole: 'guest',
+            lastMessageAt: serverTimestamp(),
+            providerUnreadCount: increment(1),
+        },
+        { merge: true }
+    )
+}
 
-    await updateDoc(conversationRef, {
-        lastMessage: cleanText,
-        lastSenderRole: input.senderRole,
-        ...(input.senderRole === 'guest'
-            ? { providerUnreadCount: 1 }
-            : { guestUnreadCount: 1 }),
+export function listenToGuestConversations(
+    user: AppUser | null,
+    callback: (items: ConversationItem[]) => void
+): Unsubscribe {
+    const guestKey = getGuestKey(user)
+
+    const conversationsQuery = query(
+        collection(db, 'Chat'),
+        where('guestKey', '==', guestKey)
+    )
+
+    return onSnapshot(conversationsQuery, (snapshot) => {
+        const items: ConversationItem[] = snapshot.docs.map((docItem) => {
+            const data = docItem.data() as Record<string, unknown>
+
+            return {
+                id: docItem.id,
+                providerId: typeof data.providerId === 'number' ? data.providerId : 0,
+                providerUid: typeof data.providerUid === 'string' ? data.providerUid : '',
+                providerName: typeof data.providerName === 'string' ? data.providerName : 'Provider',
+                providerCategory: typeof data.providerCategory === 'string' ? data.providerCategory : '',
+                providerImage: typeof data.providerImage === 'string' ? data.providerImage : '',
+                providerStatus: data.providerStatus === 'busy' ? 'busy' : 'active',
+                guestKey: typeof data.guestKey === 'string' ? data.guestKey : '',
+                guestName: typeof data.guestName === 'string' ? data.guestName : 'Guest',
+                lastMessage: typeof data.lastMessage === 'string' ? data.lastMessage : '',
+                providerUnreadCount:
+                    typeof data.providerUnreadCount === 'number' ? data.providerUnreadCount : 0,
+                guestUnreadCount:
+                    typeof data.guestUnreadCount === 'number' ? data.guestUnreadCount : 0,
+            }
+        })
+
+        items.sort((a, b) => b.id.localeCompare(a.id))
+        callback(items)
     })
 }

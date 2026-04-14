@@ -52,9 +52,9 @@ const categories: CategoryItem[] = [
         icon: <img src="/icons/repair.png" alt="" className="category-pill__image" />
     },
     {
-        id: 'appliance-repair',
-        label: 'appliance-repair',
-        icon: <img src="/icons/appliance-repair.png" alt="" className="category-pill__image" />
+        id: 'painting',
+        label: 'painting',
+        icon: <img src="/icons/paint.png" alt="" className="category-pill__image" />
     },
 ]
 

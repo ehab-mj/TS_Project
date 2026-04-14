@@ -6,7 +6,6 @@ export type PlaceCategory =
     | 'electrician'
     | 'ac repair'
     | 'repair service'
-    | 'appliance-repair'
     | 'carpenter'
     | 'maintenance'
     | 'locksmith'

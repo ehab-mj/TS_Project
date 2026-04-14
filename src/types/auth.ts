@@ -34,6 +34,7 @@ export type ServiceCategory =
   | 'carpentry'
   | 'cleaning'
   | 'painting'
+  | 'repair'
 
 export interface ProviderProfile {
   uid: string
@@ -41,6 +42,7 @@ export interface ProviderProfile {
   phone: string
   city: string
   locationLink: string
+  image: string
   bio?: string
   isAvailable: boolean
 }
