@@ -118,6 +118,7 @@ export default function HomeScreen() {
                 id: Date.now(),
                 date,
                 providerId: place.id,
+                providerUid: place.uid ?? '',
                 providerName: place.name,
                 providerCategory: place.category,
                 providerImage: place.image,

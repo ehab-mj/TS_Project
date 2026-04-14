@@ -1,5 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import type { ReactNode } from 'react'
+import { useAppSelector } from '../app/hooks'
+import { selectAuthUser } from '../features/auth/selectors'
 import '../styles/BottomNav.css'
 
 type NavItem = {
@@ -9,21 +11,13 @@ type NavItem = {
     icon: ReactNode
 }
 
-const navItems: NavItem[] = [
-    {
-        id: 'home',
-        label: 'Home',
-        to: '/',
-        icon: (
-            <svg viewBox="0 0 24 24" className="icon-fill bottom-nav__svg" aria-hidden="true">
-                <path d="M12 3.8 3.5 10.5V20h6v-5h5v5h6v-9.5L12 3.8Z" />
-            </svg>
-        ),
-    },
-    {
+export default function BottomNav() {
+    const user = useAppSelector(selectAuthUser)
+
+    const middleItem: NavItem = {
         id: 'calendar',
-        label: 'Calendar',
-        to: '/calendar',
+        label: user?.role === 'provider' ? 'Requests' : 'Calendar',
+        to: user?.role === 'provider' ? '/provider-requests' : '/calendar',
         icon: (
             <svg viewBox="0 0 24 24" className="icon-stroke bottom-nav__svg" fill="none" aria-hidden="true">
                 <path
@@ -34,30 +28,42 @@ const navItems: NavItem[] = [
                 />
             </svg>
         ),
-    },
-    {
-        id: 'favorites',
-        label: 'Favorites',
-        to: '/favorites',
-        icon: (
-            <svg viewBox="0 0 24 24" className="icon-fill bottom-nav__svg" aria-hidden="true">
-                <path d="M12 21s-7-4.35-9.33-8.42C.26 8.3 2.1 4 6.17 4c2.12 0 3.34 1.15 4.09 2.24C11.01 5.15 12.23 4 14.35 4c4.07 0 5.91 4.3 3.5 8.58C19 16.65 12 21 12 21Z" />
-            </svg>
-        ),
-    },
-    {
-        id: 'profile',
-        label: 'Profile',
-        to: '/profile',
-        icon: (
-            <svg viewBox="0 0 24 24" className="icon-fill bottom-nav__svg" aria-hidden="true">
-                <path d="M12 12a4.25 4.25 0 1 0 0-8.5 4.25 4.25 0 0 0 0 8.5Zm0 2c-4.5 0-8 2.16-8 5v1h16v-1c0-2.84-3.5-5-8-5Z" />
-            </svg>
-        ),
-    },
-]
+    }
 
-export default function BottomNav() {
+    const navItems: NavItem[] = [
+        {
+            id: 'home',
+            label: 'Home',
+            to: '/',
+            icon: (
+                <svg viewBox="0 0 24 24" className="icon-fill bottom-nav__svg" aria-hidden="true">
+                    <path d="M12 3.8 3.5 10.5V20h6v-5h5v5h6v-9.5L12 3.8Z" />
+                </svg>
+            ),
+        },
+        middleItem,
+        {
+            id: 'favorites',
+            label: 'Favorites',
+            to: '/favorites',
+            icon: (
+                <svg viewBox="0 0 24 24" className="icon-fill bottom-nav__svg" aria-hidden="true">
+                    <path d="M12 21s-7-4.35-9.33-8.42C.26 8.3 2.1 4 6.17 4c2.12 0 3.34 1.15 4.09 2.24C11.01 5.15 12.23 4 14.35 4c4.07 0 5.91 4.3 3.5 8.58C19 16.65 12 21 12 21Z" />
+                </svg>
+            ),
+        },
+        {
+            id: 'profile',
+            label: 'Profile',
+            to: '/profile',
+            icon: (
+                <svg viewBox="0 0 24 24" className="icon-fill bottom-nav__svg" aria-hidden="true">
+                    <path d="M12 12a4.25 4.25 0 1 0 0-8.5 4.25 4.25 0 0 0 0 8.5Zm0 2c-4.5 0-8 2.16-8 5v1h16v-1c0-2.84-3.5-5-8-5Z" />
+                </svg>
+            ),
+        },
+    ]
+
     return (
         <nav className="bottom-nav" aria-label="Primary">
             <div className="bottom-nav__brand">

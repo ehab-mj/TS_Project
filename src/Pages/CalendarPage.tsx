@@ -115,6 +115,7 @@ export default function CalendarPage() {
                 id: Date.now(),
                 date: selectedDate,
                 providerId: provider.id,
+                providerUid: provider.uid ?? '',
                 providerName: provider.name,
                 providerCategory: provider.category,
                 providerImage: provider.image,
