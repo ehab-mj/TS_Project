@@ -3,7 +3,6 @@ import { useAppDispatch, useAppSelector } from '../app/hooks'
 import { addBooking } from '../features/home/bookingsSlice'
 import type { Place } from '../features/home/homeSlice'
 import '../styles/CalendarPage.css'
-// import { createMockProviders } from '../data/Providers'
 
 type CalendarCategory =
     | 'all'

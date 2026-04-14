@@ -15,7 +15,6 @@ import ProviderSetupPage from '../Pages/Dashboards/ProviderSetupPage'
 import ProtectedRoute from './ProtectedRoute'
 import ProviderProfilePage from '../Pages/ProviderProfilePage'
 import RequestsPage from '../Pages/RequestsPage'
-// import TestChatPage from '../Pages/chat/TestChatPage'
 
 
 const router = createBrowserRouter([

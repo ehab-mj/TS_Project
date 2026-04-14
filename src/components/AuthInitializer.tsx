@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
 import type { ReactNode } from 'react'
-// import { selectAuthInitialized } from '../../features/auth/selectors'
 import { useAppDispatch, useAppSelector } from '../app/hooks'
 import { readSession, restoreSession } from '../features/auth/authSlice'
 import { selectAuthInitialized } from '../features/auth/selectors'
